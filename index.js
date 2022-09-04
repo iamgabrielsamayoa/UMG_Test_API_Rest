@@ -3,7 +3,8 @@ let express = require('express')
 let app = express();
 let studentRepo = require('./repos/studentRepo');
 let errorHelper = require('./helpers/errorHelpers');
-
+let mysqlConnection = require('./database');
+let randomToken = require('./random');
 
 //use the express router object
 let router = express.Router();
@@ -11,20 +12,55 @@ let router = express.Router();
 // Configure middelware to support JSON data parsing in requests of objects
 app.use(express.json());
 
-// Create GET to return a list of all students
-router.get('/', function (req, res, next) {
-    studentRepo.get(function (data) {
+
+
+//Mysql GET Method
+router.get('/', (req, res) => {
+  mysqlConnection.query('SELECT * FROM umg_test.alumnos_token;', (err, data, fields) => {
+    if(!err) {
       res.status(200).json({
         "status": 200,
         "statusText": "OK",
         "message": "All students retrieved.",
         "data": data
       });
-    }, function (err) {
-      next(err);
-    });
+    }
+    else {
+      console.log(err);
+     
+    }
+
   });
-  
+});
+
+//MYSQL GET by ID method
+router.get('/:id', (req, res) => {
+  const { id } = req.params;
+  mysqlConnection.query('SELECT * FROM umg_test.alumnos_token WHERE correlativo = ?', [id], (err, data, fields) => {
+    if(!err){ 
+      res.status(200).json({
+        "status": 200,
+        "statusText": "OK",
+        "message": "All students retrieved.",
+        "data": data
+      });
+    }
+    else {
+      res.status(404).send({
+        "status": 404,
+        "statusText": "Not Found",
+        "message": "The students '" + req.params.id + "' could not be found.",
+        "error": {
+          "code": "NOT_FOUND",
+          "message": "The student '" + req.params.id + "' could not be found."
+        }
+      });
+    }
+  })
+
+});
+
+
   // Create GET/search?id=n&name=str to search for students by 'id' and/or 'name'
   router.get('/search', function (req, res, next) {
     let searchObject = {
@@ -44,33 +80,30 @@ router.get('/', function (req, res, next) {
     });
   });
   
-  // Create GET/id to return a single student
-  router.get('/:id', function (req, res, next) {
-    studentRepo.getByid(req.params.id, function (data) {
-      if (data) {
-        res.status(200).json({
-          "status": 200,
-          "statusText": "OK",
-          "message": "All students retrieved.",
-          "data": data
-        });
-      }
-      else {
-        res.status(404).send({
-          "status": 404,
-          "statusText": "Not Found",
-          "message": "The students '" + req.params.id + "' could not be found.",
-          "error": {
-            "code": "NOT_FOUND",
-            "message": "The student '" + req.params.id + "' could not be found."
-          }
-        });
-      }
-    }, function (err) {
-      next(err);
-    });
-  });
+router.post('/',  (req, res) => {
+  //Obtenemos los parametros del usuario
+const { nombre, carrera, año, correlativo} = req.body;
+const token = randomToken(8);
 
+  const query =  `CALL umg_test.AlumnoAddOrEdit(?, ?, ?, ?, ?);`;
+  mysqlConnection.query(query, [nombre, carrera, año, correlativo, token], (err, data, fields) => {
+      if(!err){
+        res.status(201).json({
+          "status": 201, //Confirmation for post is 201
+          "statusText": "Created",
+          "message": "New Student Added",
+          "data": data 
+        })
+      }
+        else {
+          reject(err);
+        }
+
+  });
+});
+
+
+/*
 //POST method
 router.post('/', function (req, res,next) {
 studentRepo.insert(req.body, function (data) {
@@ -82,6 +115,7 @@ studentRepo.insert(req.body, function (data) {
   })
 });
 })
+*/
 
 //PUT method
 router.put('/:id', function (req, res, next) {
@@ -194,3 +228,51 @@ app.use(function(err, req, res, next) {
 var server = app.listen(5000, function() {  
     console.log('Node Server is running on http://localhost:5000..');
 });
+
+
+//Method not used anymore---------------------------------------------------------------------
+
+// Create GET to return a list of all students from txt file
+/*router.get('/', function (req, res, next) {
+    studentRepo.get(function (data) {
+      res.status(200).json({
+        "status": 200,
+        "statusText": "OK",
+        "message": "All students retrieved.",
+        "data": data
+      });
+    }, function (err) {
+      next(err);
+    });
+  });
+  */
+
+  
+  /*
+  // Create GET/id to return a single student
+  router.get('/:id', function (req, res, next) {
+    studentRepo.getByid(req.params.id, function (data) {
+      if (data) {
+        res.status(200).json({
+          "status": 200,
+          "statusText": "OK",
+          "message": "All students retrieved.",
+          "data": data
+        });
+      }
+      else {
+        res.status(404).send({
+          "status": 404,
+          "statusText": "Not Found",
+          "message": "The students '" + req.params.id + "' could not be found.",
+          "error": {
+            "code": "NOT_FOUND",
+            "message": "The student '" + req.params.id + "' could not be found."
+          }
+        });
+      }
+    }, function (err) {
+      next(err);
+    });
+  });
+*/
