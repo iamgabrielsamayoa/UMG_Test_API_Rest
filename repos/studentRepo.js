@@ -1,31 +1,33 @@
 const e = require('express');
 const { response } = require('express');
 let fs = require('fs');
+let mysqlConnection = require('../database');
+
 
 const FILE_NAME = './assets/Students.json';
 
 let StudentRepo = {
     get: function (resolve, reject) 
     {
-        fs.readFile(FILE_NAME, function (err,data)
+        mysqlConnection.query('SELECT * FROM umg_test.alumnos_token;', (err,data , fields) => 
         {
             if (err) {
                 reject(err);
             }
             else {
-                resolve(JSON.parse(data));
+                resolve(data);
             }
         });
     },
 
     getByid: function (id, resolve, reject) {
-        fs.readFile(FILE_NAME, function (err,data) {
-            if (err) {
-                reject(err);
+        mysqlConnection.query('SELECT * FROM umg_test.alumnos_token WHERE correlativo = ?', [id], (err, data, fields) =>  {
+            if (!err) {
+               let student =  data.find(p => p.correlativo == id);
+               resolve(student);
         }
         else {
-            let Student = JSON.parse(data).find(p => p.id == id);
-            resolve(Student);
+            reject(err);
     }
 });
 },

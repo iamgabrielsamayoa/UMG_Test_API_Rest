@@ -1,4 +1,4 @@
 ********************************************************************************
 Date/Time: 9/4/2022
-Exception Info: {"status":500,"statusText":"Internal Server Error","message":"correlativo is not defined","error":{"code":"INTERNAL_SERVER_ERROR","message":"correlativo is not defined"},"requestInfo":{"hostname":"localhost","path":"/api/9231"}}
+Exception Info: {"status":500,"statusText":"Internal Server Error","message":"mysqlConnection is not defined","error":{"code":"INTERNAL_SERVER_ERROR","message":"mysqlConnection is not defined"},"requestInfo":{"hostname":"localhost","path":"/api/9231"}}
 ********************************************************************************

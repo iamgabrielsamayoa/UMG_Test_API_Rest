@@ -2,10 +2,12 @@ const mysql = require('mysql');
 
 const mysqlConnection = mysql.createConnection({
     host: 'localhost',
-    user: 'lsamayoa1', //lsamayoa on local server
-    password: 'iloveR2D2',
-    //password: '123456789', //Local Server
-    database: 'umg_test'
+    user: 'lsamayoa', //lsamayoa on local server
+    //password: 'iloveR2D2',
+    password: '123456789', //Local Server
+    database: 'umg_test',
+    dbdriver: 'mysqli',
+    
 });
 
 mysqlConnection.connect(function (err) {

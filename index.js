@@ -15,50 +15,46 @@ app.use(express.json());
 
 
 //Mysql GET Method
-router.get('/', (req, res) => {
-  mysqlConnection.query('SELECT * FROM umg_test.alumnos_token;', (err, data, fields) => {
-    if(!err) {
-      res.status(200).json({
-        "status": 200,
-        "statusText": "OK",
-        "message": "All students retrieved.",
-        "data": data
-      });
-    }
-    else {
-      console.log(err);
-     
-    }
-
+router.get('/', function (req, res, next) {
+  studentRepo.get(function (data) {
+    res.status(200).json({
+      "status": 200,
+      "statusText": "OK",
+      "message": "All students retrieved.",
+      "data": data
+    });
+  }, function (err) {
+    next(err);
   });
 });
 
 //MYSQL GET by ID method
-router.get('/:id', (req, res) => {
-  const { id } = req.params;
-  mysqlConnection.query('SELECT * FROM umg_test.alumnos_token WHERE correlativo = ?', [id], (err, data, fields) => {
-    if(!err){ 
+router.get('/:id', function (req, res, next) {
+  studentRepo.getByid(req.params.id, function (data) {
+    if (data) {
       res.status(200).json({
         "status": 200,
         "statusText": "OK",
-        "message": "All students retrieved.",
+        "message": "All pies retrieved.",
         "data": data
+       
       });
     }
     else {
       res.status(404).send({
         "status": 404,
         "statusText": "Not Found",
-        "message": "The students '" + req.params.id + "' could not be found.",
+        "message": "The pie '" + req.params.id + "' could not be found.",
         "error": {
           "code": "NOT_FOUND",
-          "message": "The student '" + req.params.id + "' could not be found."
+          "message": "The pie '" + req.params.id + "' could not be found."
         }
       });
     }
-  })
-
-});
+  }, function (err) {
+    next(err);
+  });
+}); 
 
 
   // Create GET/search?id=n&name=str to search for students by 'id' and/or 'name'
@@ -79,21 +75,28 @@ router.get('/:id', (req, res) => {
       next(err);
     });
   });
-  
+
+ //POST METHOD mysql  
 router.post('/',  (req, res) => {
   //Obtenemos los parametros del usuario
-const { nombre, carrera, año, correlativo} = req.body;
-const token = randomToken(8);
-
-  const query =  `CALL umg_test.AlumnoAddOrEdit(?, ?, ?, ?, ?);`;
+  const { nombre, carrera, año, correlativo} = req.body;
+  //We generate Alphanumeric Token
+  var token = randomToken(8);
+  const query = 'INSERT INTO alumnos_token (nombre, carrera, año, correlativo, token) VALUES (?, ?, ?, ?, ?);';
+  // `CALL umg_test.AlumnoAddOrEdit(?, ?, ?, ?, ?);`;
   mysqlConnection.query(query, [nombre, carrera, año, correlativo, token], (err, data, fields) => {
       if(!err){
+        "token " + token
         res.status(201).json({
           "status": 201, //Confirmation for post is 201
           "statusText": "Created",
           "message": "New Student Added",
+          "token": token,
           "data": data 
+          
+          
         })
+        
       }
         else {
           reject(err);
@@ -225,8 +228,9 @@ app.use(function(err, req, res, next) {
 });
 
 //Create server to listen on port 5000
-var server = app.listen(5000, function() {  
-    console.log('Node Server is running on http://localhost:5000..');
+let port = 5000;
+var server = app.listen(port, function() {  
+    console.log('Node Server is running on http://localhost:'+ port);
 });
 
 
