@@ -5,11 +5,12 @@ let studentRepo = require('./repos/studentRepo');
 let errorHelper = require('./helpers/errorHelpers');
 let mysqlConnection = require('./database');
 let randomToken = require('./random');
+let addUs = require('./userCreation');
 
 //use the express router object
 let router = express.Router();
  
-// Configure middelware to support JSON data parsing in requests of objects
+// Configure middleware to support JSON data parsing in requests of objects
 app.use(express.json());
 
 
@@ -33,9 +34,7 @@ router.get('/:id', function (req, res, next) {
   studentRepo.getByid(req.params.id, function (data) {
     if (data) {
       res.status(200).json({
-        "status": 200,
-        "statusText": "OK",
-        "message": "All pies retrieved.",
+       
         "data": data
        
       });
@@ -44,10 +43,10 @@ router.get('/:id', function (req, res, next) {
       res.status(404).send({
         "status": 404,
         "statusText": "Not Found",
-        "message": "The pie '" + req.params.id + "' could not be found.",
+        "message": "The student '" + req.params.id + "' could not be found.",
         "error": {
           "code": "NOT_FOUND",
-          "message": "The pie '" + req.params.id + "' could not be found."
+          "message": "The student '" + req.params.id + "' could not be found."
         }
       });
     }
@@ -66,9 +65,6 @@ router.get('/:id', function (req, res, next) {
   
     studentRepo.search(searchObject, function (data) {
       res.status(200).json({
-        "status": 200,
-        "statusText": "OK",
-        "message": "All students retrieved.",
         "data": data
       });
     }, function (err) {
@@ -79,18 +75,20 @@ router.get('/:id', function (req, res, next) {
  //POST METHOD mysql  
 router.post('/',  (req, res) => {
   //Obtenemos los parametros del usuario
-  const { nombre, carrera, año, correlativo} = req.body;
+  const { password, name, last_name, email} = req.body;
   //We generate Alphanumeric Token
+  var username = addUs(name, last_name);
   var token = randomToken(8);
-  const query = 'INSERT INTO alumnos_token (nombre, carrera, año, correlativo, token) VALUES (?, ?, ?, ?, ?);';
+
+  const query = 'INSERT INTO alumnos_login (username, password, name, last_name, token, email) VALUES (?, ?, ?, ?, ?, ?);';
   // `CALL umg_test.AlumnoAddOrEdit(?, ?, ?, ?, ?);`;
-  mysqlConnection.query(query, [nombre, carrera, año, correlativo, token], (err, data, fields) => {
+  mysqlConnection.query(query, [username, password, name, last_name, token, email], (err, data, fields) => {
       if(!err){
         "token " + token
         res.status(201).json({
           "status": 201, //Confirmation for post is 201
           "statusText": "Created",
-          "message": "New Student Added",
+          "message": "New User Added",
           "token": token,
           "data": data 
           
@@ -106,47 +104,30 @@ router.post('/',  (req, res) => {
 });
 
 
-/*
-//POST method
-router.post('/', function (req, res,next) {
-studentRepo.insert(req.body, function (data) {
-  res.status(201).json({
-    "status": 201, //Confirmation for post is 201
-    "statusText": "Created",
-    "message": "New Student Added",
-    "data": data 
-  })
-});
-})
-*/
+//PUT Mysql
+router.put('/:id', (req, res) => {
+  const { password} = req.body;
+  const { username } = req.params;
 
-//PUT method
-router.put('/:id', function (req, res, next) {
-  studentRepo.getByid(req.params.id, function (data) {
-    if (data) {
-    //attempt to update the data
-    studentRepo.update(req.body, req.params.id, function (data) {
-      res.status(200).jsonp({
-        "status": 200,
-        "statusText": "OK",
-        "message": "Student '" + req.params.id +"' updated.",
-        "data": data 
-      })
-    })
-              }
+  const query = 'UPDATE alumnos_login SET (password) = (?) WHERE (username) = (?);';
+
+  mysqlConnection.query(query, [password, username ], (err, res, fields) => {
+    
+    if(!err) {
+      res.json({ status: 'Student Updated'});
+    } 
     else {
-      res.status(404).json({
-        "status": 404,
-        "statusText": "Not Found",
-        "message": "The Student '" + req.params.id +"' could not be found.",
-        "error": {
-          "code": "NOT_FOUND",
-          "message": "The Student '" + req.params.id +"' could not be found."
-        }
-      })
+      console.log(err);
+     
     }
-    })
-})
+
+  });
+});
+
+
+
+
+
 
 //DELETE Method
 router.delete('/:id', function(req, res, next) {

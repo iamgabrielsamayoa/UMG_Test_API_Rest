@@ -9,7 +9,7 @@ const FILE_NAME = './assets/Students.json';
 let StudentRepo = {
     get: function (resolve, reject) 
     {
-        mysqlConnection.query('SELECT * FROM umg_test.alumnos_token;', (err,data , fields) => 
+        mysqlConnection.query('SELECT * FROM umg_test.alumnos_login;', (err,data , fields) => 
         {
             if (err) {
                 reject(err);
@@ -21,9 +21,9 @@ let StudentRepo = {
     },
 
     getByid: function (id, resolve, reject) {
-        mysqlConnection.query('SELECT * FROM umg_test.alumnos_token WHERE correlativo = ?', [id], (err, data, fields) =>  {
+        mysqlConnection.query('SELECT * FROM umg_test.alumnos_login WHERE username = ?', [id], (err, data, fields) =>  {
             if (!err) {
-               let student =  data.find(p => p.correlativo == id);
+               let student =  data.find(p => p.username == id);
                resolve(student);
         }
         else {
