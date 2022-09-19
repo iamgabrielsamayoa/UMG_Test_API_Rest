@@ -106,14 +106,19 @@ router.post('/',  (req, res) => {
 
 //PUT Mysql
 router.put('/:id', (req, res) => {
-  const { password} = req.body;
-  const { username } = req.params;
+  const { password } = req.body;
+  const { username } = req.body;
 
-  const query = 'UPDATE alumnos_login SET (password) = (?) WHERE (username) = (?);';
-
-  mysqlConnection.query(query, [password, username ], (err, res, fields) => {
-    
+  const query = 'CALL umg_test.AlumnoPut(?,?);';
+//('lsamayoa','Worked1');
+  console.log(password);
+  console.log(username);
+  console.log(req.body);
+  console.log(query);
+  mysqlConnection.query(query, [username, password ], (err, rows, fields) => {
     if(!err) {
+      console.log(query);
+      
       res.json({ status: 'Student Updated'});
     } 
     else {
